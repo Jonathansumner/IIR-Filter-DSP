@@ -69,7 +69,7 @@ def callBack(data):
         plt.figure(212)
         plt.plot(np.asarray(FT_samples))
         plt.show()
-        np.savetxt("data.txt", np.asarray(FT_samples))
+        np.savetxt("data_water.txt", np.asarray(FT_samples))
         return
     jitter_sample_count += 1
 
