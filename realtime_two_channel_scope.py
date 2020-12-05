@@ -7,13 +7,12 @@ Plots channels zero and one in two different windows. Requires pyqtgraph.
 import sys
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui
-import matplotlib.pyplot as plt
-
-import numpy as np
-
 from pyfirmata2 import Arduino
+
 PORT = Arduino.AUTODETECT
 
 # create a global QT application object
@@ -58,17 +57,19 @@ samplingRate = 100
 
 FT_samples = []
 
+
 # called for every new sample at channel 0 which has arrived from the Arduino
 # "data" contains the new sample
 def callBack(data):
-    global jitter_sample_count, jitter_clock_start, FT_samples
+    global jitter_sample_count, jitter_start, FT_samples
     FT_samples.append(data)
-    if time.time() > jitter_clock_start + 10:
-        # print(jitter_sample_count, time.time() - jitter_clock_start)
+    if time.time() > jitter_start + 10:
+        print(jitter_sample_count, time.time() - jitter_start)
         print(np.asarray(FT_samples))
         plt.figure(212)
         plt.plot(np.asarray(FT_samples))
         plt.show()
+        np.savetxt("data.txt", np.asarray(FT_samples))
         return
     jitter_sample_count += 1
 
@@ -101,7 +102,7 @@ board.analog[0].register_callback(callBack)
 
 # Enable the callback
 jitter_sample_count = 0
-jitter_clock_start = time.time()
+jitter_start = time.time()
 board.analog[0].enable_reporting()
 
 # showing all the windows
