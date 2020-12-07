@@ -1,13 +1,10 @@
 #!/usr/bin/python3
 """
 Plots channels zero and one in two different windows. Requires pyqtgraph.
-
 """
 
 import sys
-import time
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui
@@ -38,7 +35,7 @@ class QtPanningPlot:
         self.layout = QtGui.QGridLayout()
         self.win.setLayout(self.layout)
         self.win.show()
-        
+
     def update(self):
         self.data = self.data[-500:]
         if self.data:
@@ -49,45 +46,25 @@ class QtPanningPlot:
 
 
 # Let's create two instances of plot windows
-qtPanningPlot1 = QtPanningPlot("Arduino 1st channel")
-qtPanningPlot2 = QtPanningPlot("Arduino 2nd channel")
+qtPanningPlot1 = QtPanningPlot("VCO output - unfiltered")
+qtPanningPlot2 = QtPanningPlot("VCO output - filtered")
 
 # sampling rate: 100Hz
 samplingRate = 100
-
-FT_samples = []
 
 
 # called for every new sample at channel 0 which has arrived from the Arduino
 # "data" contains the new sample
 def callBack(data):
-    global jitter_sample_count, jitter_start, FT_samples
-    FT_samples.append(data)
-    if time.time() > jitter_start + 10:
-        print(jitter_sample_count, time.time() - jitter_start)
-        print(np.asarray(FT_samples))
-        plt.figure(212)
-        plt.plot(np.asarray(FT_samples))
-        plt.show()
-        np.savetxt("data_water.txt", np.asarray(FT_samples))
-        return
-    jitter_sample_count += 1
-
     # filter your channel 0 samples here:
     # data = self.filter_of_channel0.dofilter(data)
     # send the sample to the plotwindow
     qtPanningPlot1.addData(data)
-    ch1 = board.analog[0].read()
-    # 1st sample of 2nd channel might arrive later so need to check
-    if ch1:
-        # filter your channel 1 samples here:
-        # ch1 = self.filter_of_channel1.dofilter(ch1)
-        qtPanningPlot2.addData(ch1)
+    # ch1 = self.filter_of_channel1.dofilter(ch1)
+    qtPanningPlot2.addData(data)
 
 
-
-
-# Get the Ardunio board.
+# Get the Arduino board.
 board = Arduino(PORT)
 
 # Set the sampling rate in the Arduino
@@ -98,11 +75,8 @@ board.samplingOn(1000 / samplingRate)
 # arrived on channel 0.
 
 board.analog[0].register_callback(callBack)
-# board.analog[0].register_callback(sample_timer)
 
 # Enable the callback
-jitter_sample_count = 0
-jitter_start = time.time()
 board.analog[0].enable_reporting()
 
 # showing all the windows
